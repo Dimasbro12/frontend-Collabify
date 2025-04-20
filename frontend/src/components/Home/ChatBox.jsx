@@ -8,7 +8,7 @@ import { toast, ToastContainer } from "react-toastify";
 import ScrollableFeed from "react-scrollable-feed";
 import { sendMessage, setWebSocketReceivedMessage } from "../../redux/appReducer/action";
 import { FaGithub } from "react-icons/fa";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+//import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default function ChatBox() {
   const selectedUserForChat = useSelector((state) => state.appReducer.selectedUserForChat);
@@ -21,9 +21,9 @@ export default function ChatBox() {
   const getMessageProcessing = useSelector((state) => state.appReducer.getMessageProcessing);
   const getMessageData = useSelector((state) => state.appReducer.getMessageData);
   const webSocket = useSelector((state) => state.appReducer.webSocket);
-  const genAi = new GoogleGenerativeAI({
-    apiKey: "AIzaSyBkDRkmr-YTM5YiNw096PmoDwu3ITjUqV0",
-  });
+  // const genAi = new GoogleGenerativeAI({
+  //   apiKey: "AIzaSyBkDRkmr-YTM5YiNw096PmoDwu3ITjUqV0",
+  // });
   const [aiResponse, setAiResponse] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [userInput, setUserInput] = useState("");
@@ -41,14 +41,15 @@ export default function ChatBox() {
       dispatch(sendMessage(obj));
     }
   };
+
   const handleAiSupport = async () => {
     if (!userInput.trim()) return;
-
+  
     setAiLoading(true);
+  
     try {
-      const model = genAi.getGenerativeModel({ model: "gemini-2.5-pro-preview-03-25" });
-
       let prompt = "";
+  
       if (userInput.includes("error") || userInput.toLowerCase().includes("exception")) {
         prompt = `
           Jelaskan error berikut secara jelas dan berikan solusi jika ada:
@@ -56,7 +57,11 @@ export default function ChatBox() {
           ${userInput}
           ---
           Jika memungkinkan, berikan contoh perbaikan kode.`;
-      } else if (userInput.includes("function") || userInput.includes(";") || userInput.includes("{")) {
+      } else if (
+        userInput.includes("function") ||
+        userInput.includes(";") ||
+        userInput.includes("{")
+      ) {
         prompt = `
           Berdasarkan potongan kode berikut, carikan referensi repository GitHub open-source yang relevan, 
           dan berikan sedikit penjelasan:
@@ -69,17 +74,61 @@ export default function ChatBox() {
       } else {
         prompt = `Bantu jawab atau beri respon yang relevan untuk pesan ini: ${userInput}`;
       }
-
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = await response.text();
-      setAiResponse(text);
+  
+      // Ganti dengan endpoint lokal kamu
+      const response = await axios.post("http://localhost:8000/api/ai/ask", {
+        prompt: prompt.trim()
+      });
+  
+      const aiReply = response.data.reply || "⚠️ Tidak ada balasan dari AI.";
+      setAiResponse(aiReply);
     } catch (error) {
-      setAiResponse("⚠️ Gagal menghubungi AI.");
+      console.error("Error contacting AI:", error);
+      setAiResponse("⚠️ Gagal menghubungi AI lokal.");
     } finally {
       setAiLoading(false);
     }
   };
+  
+  // const handleAiSupport = async () => {
+  //   if (!userInput.trim()) return;
+
+  //   setAiLoading(true);
+  //   try {
+  //     const model = genAi.getGenerativeModel({ model: "gemini-2.5-pro-preview-03-25" });
+
+  //     let prompt = "";
+  //     if (userInput.includes("error") || userInput.toLowerCase().includes("exception")) {
+  //       prompt = `
+  //         Jelaskan error berikut secara jelas dan berikan solusi jika ada:
+  //         ---
+  //         ${userInput}
+  //         ---
+  //         Jika memungkinkan, berikan contoh perbaikan kode.`;
+  //     } else if (userInput.includes("function") || userInput.includes(";") || userInput.includes("{")) {
+  //       prompt = `
+  //         Berdasarkan potongan kode berikut, carikan referensi repository GitHub open-source yang relevan, 
+  //         dan berikan sedikit penjelasan:
+  //         ---
+  //         ${userInput}
+  //         ---
+  //         Format balasan:
+  //         - Penjelasan singkat
+  //         - Daftar repository dengan nama & link`;
+  //     } else {
+  //       prompt = `Bantu jawab atau beri respon yang relevan untuk pesan ini: ${userInput}`;
+  //     }
+
+  //     const result = await model.generateContent(prompt);
+  //     const response = await result.response;
+  //     const text = await response.text();
+  //     setAiResponse(text);
+  //   } catch (error) {
+  //     setAiResponse("⚠️ Gagal menghubungi AI.");
+  //   } finally {
+  //     setAiLoading(false);
+  //   }
+  // };
 
   useEffect(() => {
     return () => {
