@@ -8,6 +8,7 @@ import { toast, ToastContainer } from "react-toastify";
 import ScrollableFeed from "react-scrollable-feed";
 import { sendMessage, setWebSocketReceivedMessage } from "../../redux/appReducer/action";
 import { FaGithub } from "react-icons/fa";
+import axios from "axios";
 //import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default function ChatBox() {
@@ -21,6 +22,9 @@ export default function ChatBox() {
   const getMessageProcessing = useSelector((state) => state.appReducer.getMessageProcessing);
   const getMessageData = useSelector((state) => state.appReducer.getMessageData);
   const webSocket = useSelector((state) => state.appReducer.webSocket);
+  const currentUser = useSelector((state) => state.authReducer.user);
+  const userId = currentUser?._id;
+
   // const genAi = new GoogleGenerativeAI({
   //   apiKey: "AIzaSyBkDRkmr-YTM5YiNw096PmoDwu3ITjUqV0",
   // });
@@ -44,8 +48,14 @@ export default function ChatBox() {
 
   const handleAiSupport = async () => {
     if (!userInput.trim()) return;
+    const userData = JSON.parse(localStorage.getItem("chat-app-login-user-data"));
+    const userId = userData?.user?._id || userData?._id;
+    if (!userId) {
+      toast.error("User not logged in");
+      return;
+    }
   
-    setAiLoading(true);
+    
   
     try {
       let prompt = "";
@@ -76,8 +86,10 @@ export default function ChatBox() {
       }
   
       // Ganti dengan endpoint lokal kamu
-      const response = await axios.post("http://localhost:8000/api/ai/ask", {
-        prompt: prompt.trim()
+      setAiLoading(true);
+      const response = await axios.post("http://localhost:8080/api/ai/ask",{
+        prompt: prompt.trim(),
+        userId: userId,
       });
   
       const aiReply = response.data.reply || "⚠️ Tidak ada balasan dari AI.";

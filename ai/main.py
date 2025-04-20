@@ -162,6 +162,8 @@
 #     chat_session.history.append({"role": "user", "parts": [user_input]})
 #     chat_session.history.append({"role": "model", "parts": [model_response]})
 
+
+#uvicorn main:app --host 0.0.0.0 --port 8080
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -227,18 +229,29 @@ app.add_middleware(
 # Request model
 class PromptRequest(BaseModel):
     prompt: str
+    user_id: str  # Add userId to the request model
+
+# Replace the single session with a dictionary
+user_sessions = {}
 
 @app.post("/api/ai/ask")
 async def ask_ai(request: PromptRequest):
-    try:
-        user_input = request.prompt
-        response = chat_session.send_message(user_input)
-        model_response = response.text
+    # Pass userId from frontend/backend
+    userId =request.userId
+    user_id = userId
+    prompt = request.prompt
 
-        # Keep chat history for context
-        chat_session.history.append({"role": "user", "parts": [user_input]})
-        chat_session.history.append({"role": "model", "parts": [model_response]})
+    # Create a session for the user if it doesn't exist
+    if user_id not in user_sessions:
+        user_sessions[user_id] = model.start_chat(history=[])
 
-        return {"reply": model_response}
-    except Exception as e:
-        return {"error": str(e)}
+    session = user_sessions[user_id]
+    response = session.send_message(prompt)
+    model_response = response.text
+
+    # Save to history
+    session.history.append({"role": "user", "parts": [prompt]})
+    session.history.append({"role": "model", "parts": [model_response]})
+
+    return {"reply": model_response}
+

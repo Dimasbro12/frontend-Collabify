@@ -10,7 +10,10 @@ const askAI = async (req, res) => {
 
   try {
     // Example API call to AI (change to your real endpoint)
-    const response = await axios.post("http://localhost:8080/api/ai/ask", { prompt });
+    const response = await axios.post("http://localhost:8080/api/ai/ask", { 
+      prompt,
+      userId
+     });
     const aiReply = response.data.reply;
 
     // Save to DB
@@ -28,8 +31,11 @@ const askAI = async (req, res) => {
         console.error("AI service endpoint not found:", error.response.data);
         return res.status(404).json({ error: "AI service endpoint not found" });
       }
-      console.error("AI service error:", error.response.data);
-      return res.status(error.response.status).json({ error: error.response.data });
+      try {
+        console.error("AI service error:", JSON.stringify(error.response.data, null, 2));
+      } catch (e) {
+        console.error("AI service error (stringify failed):", error.message);
+      }
     } else if (error.request) {
       console.error("No response from AI service:", error.request);
       return res.status(500).json({ error: "No response from AI service" });
