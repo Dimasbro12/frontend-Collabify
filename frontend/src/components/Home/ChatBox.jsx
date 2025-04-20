@@ -23,8 +23,7 @@ export default function ChatBox() {
   const getMessageData = useSelector((state) => state.appReducer.getMessageData);
   const webSocket = useSelector((state) => state.appReducer.webSocket);
   const currentUser = useSelector((state) => state.authReducer.user);
-  const userId = currentUser?._id;
-
+  
   // const genAi = new GoogleGenerativeAI({
   //   apiKey: "AIzaSyBkDRkmr-YTM5YiNw096PmoDwu3ITjUqV0",
   // });
@@ -48,9 +47,10 @@ export default function ChatBox() {
 
   const handleAiSupport = async () => {
     if (!userInput.trim()) return;
+    // user_id = selectedUserForChat._id
     const userData = JSON.parse(localStorage.getItem("chat-app-login-user-data"));
-    const userId = userData?.user?._id || userData?._id;
-    if (!userId) {
+    const user_id = userData?.user?._id || userData?._id;
+    if (!user_id) {
       toast.error("User not logged in");
       return;
     }
@@ -89,7 +89,7 @@ export default function ChatBox() {
       setAiLoading(true);
       const response = await axios.post("http://localhost:8080/api/ai/ask",{
         prompt: prompt.trim(),
-        userId: userId,
+        user_id: user_id,
       });
   
       const aiReply = response.data.reply || "⚠️ Tidak ada balasan dari AI.";

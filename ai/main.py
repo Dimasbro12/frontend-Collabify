@@ -166,7 +166,7 @@
 #uvicorn main:app --host 0.0.0.0 --port 8080
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import os
 import google.generativeai as genai
 from dotenv import load_dotenv
@@ -229,16 +229,23 @@ app.add_middleware(
 # Request model
 class PromptRequest(BaseModel):
     prompt: str
-    user_id: str  # Add userId to the request model
+    user_id: str = Field(..., alias="userId")
+
+    class Config:
+        allow_population_by_field_name = True
+
 
 # Replace the single session with a dictionary
 user_sessions = {}
 
 @app.post("/api/ai/ask")
+
 async def ask_ai(request: PromptRequest):
     # Pass userId from frontend/backend
-    userId =request.userId
-    user_id = userId
+    print("🔥 Request received!")
+    print("Prompt:", request.prompt)
+    print("User ID:", request.user_id)
+    user_id =request.user_id
     prompt = request.prompt
 
     # Create a session for the user if it doesn't exist
