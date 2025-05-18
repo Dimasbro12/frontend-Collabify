@@ -38,7 +38,7 @@
 <li> clone repo  </li>
 <li> cd backend </li>
 <li> npm install </li>
-<li> node index.js </li>
+<li> npm start server.js </li>
 </ul>
 
 <h1>  Frontend Installation </h1>
@@ -46,5 +46,5 @@
 <li> clone repo  </li>
 <li> cd frontend </li>
 <li> npm install </li>
-<li> npm start </li>
+<li> npm run </li>
 </ul>
