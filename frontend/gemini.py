@@ -4,7 +4,7 @@ from pydantic import BaseModel
 import google.generativeai as genai
 
 # Konfigurasi API Key
-genai.configure(api_key="AIzaSyBkDRkmr-YTM5YiNw096PmoDwu3ITjUqV0")
+genai.configure(api_key="AIzaSyDTyck_t2v4xD-7QBP43iYX7wid3b520hY")
 
 # Konfigurasi model
 generation_config = {
