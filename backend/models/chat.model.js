@@ -8,6 +8,19 @@ const chatModal = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref:"User"
     }],
+    anonymUsers: [
+    {
+        _id: { type: String },
+        name: { type: String }
+    }
+    ],
+    groupAnonToken:{
+        type: String,
+        unique: true,
+    },
+    groupAnonTokenExpires:{
+        type: String,
+    },
     latestMessage:{
         type: mongoose.Schema.Types.ObjectId,
         ref:"Message"        

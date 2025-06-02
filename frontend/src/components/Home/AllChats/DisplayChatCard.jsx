@@ -14,8 +14,11 @@ const DisplayChatCard = ({ item }) => {
     webSocket.emit("join chat", item._id);
   };
 
+  const isAIChat= item.type === "AI_CHATBOT" || item.isAI;
+
   // Find the user from item that doesn't match the _id in parsedData
-  const selectedUser = item.users.find((user) => user._id !== parsedData._id);
+  const selectedUser = isAIChat 
+  ? { name: "AI Assistant", pic: "https://cdn-icons-png.flaticon.com/512/4712/4712035.png"}:item.users.find((user) => user._id !== parsedData._id);
 
   return (
     <div

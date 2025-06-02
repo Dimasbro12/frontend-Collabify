@@ -1,15 +1,18 @@
+// client/src/components/ChatBox/ChatBox.js
 import React, { useEffect, useState } from "react";
 import { BsEmojiSmile, BsSendFill } from "react-icons/bs";
+import { FaRobot } from "react-icons/fa";
 import Message from "./ChatBox/Mesaage";
 import ChatHeader from "./ChatBox/ChatHeader";
 import { useDispatch, useSelector } from "react-redux";
 import logo from "../../assets/white-logo.png";
 import { toast, ToastContainer } from "react-toastify";
 import ScrollableFeed from "react-scrollable-feed";
-import { sendMessage, setWebSocketReceivedMessage } from "../../redux/appReducer/action";
-import { FaGithub } from "react-icons/fa";
+import { getAIResponse, sendMessage, setWebSocketReceivedMessage } from "../../redux/appReducer/action";
 import axios from "axios";
-//import { GoogleGenerativeAI } from "@google/generative-ai";
+import io from "socket.io-client";
+
+const socket = io(process.env.REACT_APP_API_URL || "http://localhost:8080");
 
 export default function ChatBox() {
   const selectedUserForChat = useSelector((state) => state.appReducer.selectedUserForChat);
@@ -17,240 +20,159 @@ export default function ChatBox() {
   const sendMessageFail = useSelector((state) => state.appReducer.sendMessageFail);
   const sendMessageObj = useSelector((state) => state.appReducer.sendMessageObj);
   const sendMessageProcessing = useSelector((state) => state.appReducer.sendMessageProcessing);
-
   const notficationsMessages = useSelector((state) => state.appReducer.notficationsMessages);
   const getMessageProcessing = useSelector((state) => state.appReducer.getMessageProcessing);
   const getMessageData = useSelector((state) => state.appReducer.getMessageData);
+  const currentUser = useSelector((state) => state.authReducer.sign_in_User);
+  const isAnonym = useSelector((state) => state.authReducer.isAnonym);
+  const anonymId = useSelector((state) => state.authReducer.anonymId);
+  const anonymName = useSelector((state) => state.authReducer.anonymName);
   const webSocket = useSelector((state) => state.appReducer.webSocket);
-  const currentUser = useSelector((state) => state.authReducer.user);
   
-  // const genAi = new GoogleGenerativeAI({
-  //   apiKey: "AIzaSyBkDRkmr-YTM5YiNw096PmoDwu3ITjUqV0",
-  // });
-  const [aiResponse, setAiResponse] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
+
   const [userInput, setUserInput] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
   const dispatch = useDispatch();
+
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8080";
+
+  // useEffect(() => {
+  //   socket.on("connect", () => {
+  //     console.log("Socket.IO connected");
+  //   });
+  //   socket.on("connect_error", (error) => {
+  //     console.error("Socket.IO error:", error);
+  //   });
+  //   return () => {
+  //     socket.off("connect");
+  //     socket.off("connect_error");
+  //   };
+  // }, []);
 
   const handleSendMessage = () => {
     let obj = {
       content: userInput.trim(),
       chatId: selectedUserForChat._id,
     };
-
     if (!obj.content) {
-      toast.warn("Write something to send", { position: toast.POSITION.BOTTOM_LEFT });
-    } else {
-      dispatch(sendMessage(obj));
+      toast.warn("Please write a message to send", { position: "bottom-left", autoClose: 2000 });
     }
+    dispatch(sendMessage(obj));
+    setUserInput("");
   };
 
-  const handleAiSupport = async () => {
-    if (!userInput.trim()) return;
-    // user_id = selectedUserForChat._id
-    const userData = JSON.parse(localStorage.getItem("chat-app-login-user-data"));
-    const user_id = userData?.user?._id || userData?._id;
-    if (!user_id) {
-      toast.error("User not logged in");
+  const handleAiSupport = async () =>{
+    if(!userInput.trim()){
+      toast.warn("Please write a message to ask AI", { position: "bottom-left", autoClose: 2000 });
       return;
     }
-  
-    
-  
-    try {
-      let prompt = "";
-  
-      if (userInput.includes("error") || userInput.toLowerCase().includes("exception")) {
-        prompt = `
-          Jelaskan error berikut secara jelas dan berikan solusi jika ada:
-          ---
-          ${userInput}
-          ---
-          Jika memungkinkan, berikan contoh perbaikan kode.`;
-      } else if (
-        userInput.includes("function") ||
-        userInput.includes(";") ||
-        userInput.includes("{")
-      ) {
-        prompt = `
-          Berdasarkan potongan kode berikut, carikan referensi repository GitHub open-source yang relevan, 
-          dan berikan sedikit penjelasan:
-          ---
-          ${userInput}
-          ---
-          Format balasan:
-          - Penjelasan singkat
-          - Daftar repository dengan nama & link`;
-      } else {
-        prompt = `Bantu jawab atau beri respon yang relevan untuk pesan ini: ${userInput}`;
-      }
-  
-      // Ganti dengan endpoint lokal kamu
-      setAiLoading(true);
-      const response = await axios.post("http://localhost:8080/api/ai/ask",{
-        prompt: prompt.trim(),
-        user_id: user_id,
-      });
-  
-      const aiReply = response.data.reply || "⚠️ Tidak ada balasan dari AI.";
-      setAiResponse(aiReply);
-    } catch (error) {
-      console.error("Error contacting AI:", error);
-      setAiResponse("⚠️ Gagal menghubungi AI lokal.");
-    } finally {
-      setAiLoading(false);
-    }
-  };
-  
-  // const handleAiSupport = async () => {
-  //   if (!userInput.trim()) return;
-
-  //   setAiLoading(true);
-  //   try {
-  //     const model = genAi.getGenerativeModel({ model: "gemini-2.5-pro-preview-03-25" });
-
-  //     let prompt = "";
-  //     if (userInput.includes("error") || userInput.toLowerCase().includes("exception")) {
-  //       prompt = `
-  //         Jelaskan error berikut secara jelas dan berikan solusi jika ada:
-  //         ---
-  //         ${userInput}
-  //         ---
-  //         Jika memungkinkan, berikan contoh perbaikan kode.`;
-  //     } else if (userInput.includes("function") || userInput.includes(";") || userInput.includes("{")) {
-  //       prompt = `
-  //         Berdasarkan potongan kode berikut, carikan referensi repository GitHub open-source yang relevan, 
-  //         dan berikan sedikit penjelasan:
-  //         ---
-  //         ${userInput}
-  //         ---
-  //         Format balasan:
-  //         - Penjelasan singkat
-  //         - Daftar repository dengan nama & link`;
-  //     } else {
-  //       prompt = `Bantu jawab atau beri respon yang relevan untuk pesan ini: ${userInput}`;
-  //     }
-
-  //     const result = await model.generateContent(prompt);
-  //     const response = await result.response;
-  //     const text = await response.text();
-  //     setAiResponse(text);
-  //   } catch (error) {
-  //     setAiResponse("⚠️ Gagal menghubungi AI.");
-  //   } finally {
-  //     setAiLoading(false);
-  //   }
-  // };
-
+    dispatch(getAIResponse(userInput, selectedUserForChat._id));
+    setUserInput("");
+  }
   useEffect(() => {
-    return () => {
-      webSocket.off("message received");
+    if (!sendMessageProcessing && !sendMessageFail && sendMessageSuccess && sendMessageObj && selectedUserForChat) {
+      webSocket.emit("new message", sendMessageObj);
+      // dispatch(setWebSocketReceivedMessage(getMessageData, sendMessageObj, notficationsMessages, selectedUserForChat));
+    }
+    if (!sendMessageProcessing && sendMessageFail) {
+      toast.error("Message not sent. Try again.", { position: "bottom-left", autoClose: 2000 });
+    }
+  }, [sendMessageSuccess, sendMessageFail, sendMessageProcessing, dispatch, getMessageData, notficationsMessages, selectedUserForChat, sendMessageObj]);
+
+
+  useEffect(() =>{
+    const handleNewMessageRecieved = (newMessageRec) => {
+      dispatch(setWebSocketReceivedMessage(getMessageData, newMessageRec, notficationsMessages, selectedUserForChat))
+    };
+    webSocket.on("message recieved", handleNewMessageRecieved);
+    return() =>{
+      webSocket.off("message recieved");
     };
   }, [webSocket]);
 
-  useEffect(() => {
-    if (!sendMessageProcessing && !sendMessageFail && sendMessageSuccess) {
-      setUserInput("");
-      webSocket.emit("new message", sendMessageObj);
-      dispatch(setWebSocketReceivedMessage(getMessageData, sendMessageObj, notficationsMessages, selectedUserForChat));
-    }
-
-    if (!sendMessageProcessing && sendMessageFail && !sendMessageSuccess) {
-      toast.error("Message not sent. Try again.", { position: toast.POSITION.BOTTOM_LEFT });
-    }
-  }, [sendMessageSuccess, sendMessageFail, sendMessageProcessing]);
-
-  useEffect(() => {
-    const handleNewMessageReceived = (newMessageRec) => {
-      dispatch(setWebSocketReceivedMessage(getMessageData, newMessageRec, notficationsMessages, selectedUserForChat));
-    };
-
-    webSocket.on("message received", handleNewMessageReceived);
-
-    return () => {
-      webSocket.off("message received", handleNewMessageReceived);
-    };
-  }, [webSocket, selectedUserForChat, getMessageData]);
-
   if (!selectedUserForChat) {
     return (
-      <div className="flex flex-col h-4/5 mt-8 bg-primary-600/50 rounded-lg px-4 py-2 pb-4">
+      <div className="flex flex-col h-full mt-6 bg-gradient-to-br from-indigo-900 to-purple-800 rounded-2xl shadow-xl p-8">
         <div className="flex flex-col items-center justify-center h-full">
-          <img className="w-20 h-20 mr-2" src={logo} alt="logo" />
-          <p className="text-white">Enjoy Your Chat!</p>
+          <img className="w-28 h-28 mb-4 animate-pulse" src={logo} alt="Collabify Logo" />
+          <p className="text-white text-xl font-bold tracking-wide">Welcome to Collabify! Start a chat now.</p>
         </div>
       </div>
     );
   }
+
   return (
-    <>
+    <div className="flex flex-col h-full">
       <ChatHeader />
-      <div className="flex flex-col bg-gradient-to-r from-purple-600 via-fuchsia-500 to-green-400/80 rounded-bl-lg rounded-br-lg px-4 py-2 pb-4">
-        <div className="flex h-full flex-col max-h-[75vh] overflow-y-auto bg-primary-400  rounded-lg mb-2">
-          {getMessageProcessing && (
+      <div className="flex flex-col flex-grow bg-white/95 backdrop-blur-md rounded-b-2xl shadow-lg p-6">
+        <div className="flex flex-col h-[calc(100vh-14rem)] bg-gray-50/80 rounded-xl p-5 overflow-y-auto shadow-inner">
+          {getMessageProcessing ? (
             <div className="flex flex-col items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white"></div>
-              <span className="mr-2 text-white">Loading Messages</span>
+              <div className="animate-spin rounded-full h-14 w-14 border-t-4 border-indigo-600"></div>
+              <span className="mt-3 text-indigo-900 font-semibold">Loading Messages...</span>
             </div>
-          )}
-          <ScrollableFeed>
-            {Array.isArray(getMessageData) && getMessageData.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full">
-                <img className="w-20 h-20 mr-2" src={logo} alt="logo" />
-                <p className="text-white">Start Chating!</p>
-              </div>
-            ) : (
-              Array.isArray(getMessageData) && getMessageData.map((item) => <Message item={item} key={item.id} />)
-            )}
-          </ScrollableFeed>
-          {aiResponse && (
-            <div className="bg-white text-sm text-gray-800 rounded-lg p-3 shadow mt-2 border-l-4 border-purple-500 whitespace-pre-line">
-              <strong>🤖 AI Response:</strong>
-              <div>{aiResponse}</div>
-            </div>
+          ) : (
+            <ScrollableFeed>
+              {Array.isArray(getMessageData) && getMessageData.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full">
+                  <img className="w-24 h-24 mb-4" src={logo} alt="Collabify Logo" />
+                  <p className="text-indigo-900 font-semibold">No messages yet. Start chatting!</p>
+                </div>
+              ) : (
+                Array.isArray(getMessageData) &&
+                getMessageData.map((item) => <Message item={item} key={item._id} />)
+              )}
+            </ScrollableFeed>
           )}
         </div>
-        <div className="relative mt-2">
-          <input
-            disabled={sendMessageProcessing}
-            value={userInput}
-            onChange={(e) => {
-              setUserInput(e.target.value);
-            }}
-            type="text"
-            className="border border-gray-300 bg-primary-50 text-primary-900 font-semibold sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 pr-10 "
-            placeholder="Type your message..."
-          />
-          <button type="button" className="absolute inset-y-0 right-10 px-8 py-2.7 text-primary-800 focus:outline-none">
-            <BsEmojiSmile className="w-5 h-5" />
-          </button>
-          <button
-            disabled={sendMessageProcessing}
-            type="button"
-            className="absolute inset-y-0  right-1 top-1 bottom-1 px-2.5 py-1 rounded-lg hover:bg-primary-700 bg-primary-800 text-primary-100 focus:outline-none"
-            onClick={handleSendMessage}
-          >
-            {sendMessageProcessing ? (
-              <div className="flex items-center justify-center">
-                <span className="mr-2">Sending</span>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              </div>
-            ) : (
-              "Send"
-            )}
-          </button>
-          <button
-            disabled={sendMessageProcessing || aiLoading}
-            type="button"
-            className="absolute inset-y-0 right-24 top-1 bottom-1 px-2.5 py-1 rounded-lg hover:bg-purple-700 bg-purple-800 text-white focus:outline-none"
-            onClick={handleAiSupport}
-          >
-            <FaGithub className="inline-block mr-1" />
-            {aiLoading ? "Thinking..." : "Ask AI"}
-          </button>
+        <div className="mt-4 flex items-center gap-3">
+          <div className="relative flex-grow">
+            <input
+              disabled={sendMessageProcessing}
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              type="text"
+              className="w-full p-3.5 pr-36 rounded-full bg-white border border-gray-200 text-gray-800 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-md placeholder-gray-400"
+              placeholder="Type your message..."
+            />
+            <button
+              type="button"
+              className="absolute right-28 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-indigo-600 transition-colors"
+            >
+              <BsEmojiSmile className="w-5 h-5" />
+            </button>
+            <button
+              disabled={sendMessageProcessing || aiLoading}
+              type="button"
+              className={`absolute right-16 top-1/2 transform -translate-y-1/2 px-3 py-1.5 rounded-full text-white text-sm font-medium transition-all ${
+                aiLoading ? "bg-gray-400" : "bg-purple-600 hover:bg-purple-700"
+              }`}
+              onClick={handleAiSupport}
+            >
+              <FaRobot className="inline-block mr-1 w-4 h-4" />
+              {aiLoading ? "Thinking" : "Ask AI"}
+            </button>
+            <button
+              disabled={sendMessageProcessing}
+              type="button"
+              className={`absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1.5 rounded-full text-white text-sm font-medium transition-all ${
+                sendMessageProcessing ? "bg-gray-400" : "bg-indigo-600 hover:bg-indigo-700"
+              }`}
+              onClick={handleSendMessage}
+            >
+              {sendMessageProcessing ? (
+                <div className="flex items-center">
+                  {/* <span className="mr-1 text-xs">Sending</span> */}
+                  <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white"></div>
+                </div>
+              ) : (
+                <BsSendFill className="w-4 h-4" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
       <ToastContainer />
-    </>
+    </div>
   );
 }

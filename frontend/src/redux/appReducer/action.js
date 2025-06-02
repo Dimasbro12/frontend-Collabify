@@ -1,6 +1,8 @@
 import axios from "axios";
 import * as types from "./actionType";
 
+// import { get } from "http";
+
 const END_POINT = "https://chatc.onrender.com";
 
 const jwtToken = () => {
@@ -222,4 +224,88 @@ const removeMembersFromGroup = (obj) => async (dispatch) => {
   }
 };
 
-export { searchUsers, createSingleUserChat, getChats, createGroup, addMembersInGroup, removeMembersFromGroup, changeGroupName, selectUserForChat, sendMessage, getMessage, setWebSocketReceivedMessage };
+const getAIResponse = (userInput, chatId) => async (dispatch) =>{
+  dispatch({type: types.AI_REQUEST_PROCESSING});
+  try{
+    const {data} = await axios.post('http://localhost:8080/api/ai/ask', {
+      prompt:userInput,
+      chatId,
+    });
+
+    dispatch({type:types.AI_REQUEST_SUCCESS});
+    dispatch(getMessage(chatId));
+
+    // dispatch({type: types.ADD_AI_MESSAGE,
+    //   payload: {
+    //     _id: Date.now(),
+    //     sender: {name: "Chatbot", _id: "chatbot"},
+    //     message: data.reply,
+    //     createdAt: new Date().toISOString(),
+    //   }
+    // })
+  }catch(error){
+    console.log(error);
+    dispatch({type: types.AI_REQUEST_FAIL});
+  }
+};
+
+
+// yang perlu ditambahkan:
+// const joinGroup
+
+const joinGroup = (groupId) => async (dispatch) => {
+  dispatch({type: types.JOIN_GROUP_REQUEST});
+  try{
+    const result = await axios.post('http://localhost:8080/api/chat/group/user/join', {groupId}, {
+      headers: {Authorization: jwtToken()},
+    });
+    dispatch({type: types.JOIN_GROUP_SUCCESS, payload: result.data});
+  }catch(error){
+    dispatch({type: types.JOIN_GROUP_FAIL, payload: error.response?.data?.error || "Failed to join group"});
+}
+};
+
+// const exitGroup
+// router.route("/group/exit").post(authUserMiddleware, exitGroup)
+
+const exitGroup = (groupId) => async (dispatch) => {
+  dispatch({type: types.EXIT_GROUP_REQUEST});
+  try {
+    const result = await axios.post('http://localhost:8080/api/chat/group/exit', {groupId}, {
+      headers: {Authorization: jwtToken()},
+    });
+    dispatch({type: types.EXIT_GROUP_SUCCESS, payload: result.data});
+  }catch (error) {
+    dispatch({type: types.EXIT_GROUP_FAIL, payload: error.response?.data?.error || "Failed to exit group"});
+}
+};
+
+// const deleteGroup
+// router.route("/delete").post(authUserMiddleware, deleteChatForUser)
+const deleteChatForUser = (chatId) => async (dispatch) => {
+  dispatch({type: types.DELETE_GROUP_REQUEST});
+  try{
+    const result = await axios.post('http://localhost:8080/api/chat/delete', {chatId}, {
+      headers: {Authorization: jwtToken()},
+    });
+    dispatch({type: types.DELETE_GROUP_SUCCESS, payload: result.data});
+  }catch(error){
+    dispatch({type: types.DELETE_GROUP_FAIL, payload: error.response?.data?.error || "Failed to delete chat"});
+  }
+}
+
+//const joinGroupAnonymous
+// router.route("group/anonymous/join").post(joinGroupAnonymous)
+const joinGroupAnonymous = (groupId) => async (dispatch) => {
+  dispatch({type: types.JOIN_GROUP_ANONYMOUS_REQUEST});
+  try{
+    const result = await axios.post('http://localhost:8080/api/chat/group/anonymous/join', {groupId});
+    dispatch({type: types.JOIN_GROUP_ANONYMOUS_SUCCESS, payload: result.data});
+  }catch(error){
+    dispatch({type: types.JOIN_GROUP_ANONYMOUS_FAIL, payload: error.response?.data?.error || "Failed to join group anonymously"});
+  }
+}
+
+
+
+export { searchUsers, createSingleUserChat, getChats, createGroup, addMembersInGroup, removeMembersFromGroup, changeGroupName, selectUserForChat, sendMessage, getMessage, setWebSocketReceivedMessage, getAIResponse, joinGroup, exitGroup, deleteChatForUser, joinGroupAnonymous };

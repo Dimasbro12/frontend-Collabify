@@ -1,3 +1,4 @@
+// import { exitGroup, joinGroupAnonymous } from "./action";
 import * as types from "./actionType"
 
 const initialState = {
@@ -52,6 +53,27 @@ const initialState = {
     notficationsMessages: [],
 
     webSocket: "",
+
+    aiLoading: false,
+    aiError: null,
+
+    joinGroupProcessing: false,
+    joinGroupSucces: false,
+    joinGroupFail: false,
+    joinedGroup: {},
+
+
+    exitGroupProcessing: false,
+    exitGroupSuccess: false,
+    exitGroupFail: false,
+
+    deleteGroupProcessing: false,
+    deleteGroupSuccess: false,
+    deleteGroupFail: false,
+
+    joinGroupAnonymousProcessing: false,
+    joinGroupAnonymousSuccess: false,
+    joinGroupAnonymousFail: false,
 }
 
 export const reducer = (state = initialState, action) => {
@@ -284,7 +306,7 @@ export const reducer = (state = initialState, action) => {
                 getMessageProcessing: false,
                 getMessageSuccess: true,
                 getMessageFail: false,
-                getMessageData: payload,
+                getMessageData: action.payload,
             };
         case types.GET_MESSAGE_REQUEST_FAIL:
             return {
@@ -294,6 +316,114 @@ export const reducer = (state = initialState, action) => {
                 getMessageFail: true,
                 getMessageData: {},
             };
+        case types.AI_REQUEST_PROCESSING:
+            return{
+                ...state,aiLoading:true,aiError:null
+            }
+        case types.AI_REQUEST_SUCCESS:
+            return{
+                ...state,aiLoading:false
+            }
+
+        case types.AI_REQUEST_FAIL:
+            return{
+                ...state,aiLoading:false,aiError:action.payload
+            }
+        // case types.ADD_AI_MESSAGE:
+        //     return{
+        //         ...state,
+        //         getMessageData: {
+        //             ...state.getMessageData,
+        //             messages: [...state.getMessageData.messages, payload]
+        //         }
+        //     }
+        case types.JOIN_GROUP_REQUEST:
+            return{
+                ...state,
+                joinGroupProcessing: true,
+                joinGroupSucces: false, 
+                joinGroupFail: false,
+            }
+        case types.JOIN_GROUP_SUCCESS:
+            return{
+                ...state,
+                joinGroupProcessing: false,
+                joinGroupSucces: true, 
+                joinGroupFail: false,
+            }
+        case types.JOIN_GROUP_FAIL:
+            return{
+                ...state,
+                joinGroupProcessing: false,
+                joinGroupSucces: false, 
+                joinGroupFail: true,
+            }
+        case types.EXIT_GROUP_REQUEST:
+            return {
+                ...state,
+                exitGroupProcessing: true,
+                exitGroupSuccess: false,
+                exitGroupFail: false,
+            }
+        case types.EXIT_GROUP_SUCCESS:
+            return{
+                ...state,
+                exitGroupProcessing: false,
+                exitGroupSuccess:true,
+                exitGroupFail: false,
+                allChat: state.allChat.filter(chat => chat._id !== payload._id),
+            }
+        case types.EXIT_GROUP_FAIL:
+            return {
+                ...state,
+                exitGroupProcessing: false,
+                exitGroupSuccess: false,
+                exitGroupFail: true,
+            }
+        case types.DELETE_GROUP_REQUEST:
+            return {
+                ...state,
+                deleteGroupProcessing: true,
+                deleteGroupSuccess: false,
+                deleteGroupFail: false,
+            }
+        case types.DELETE_GROUP_SUCCESS:
+            return{
+                ...state,
+                deleteGroupProcessing: false,
+                deleteGroupSuccess: true,
+                deleteGroupFail: false,
+                allChat: state.allChat.filter(chat => chat._id !== payload._id),
+            }
+        case types.DELETE_GROUP_FAIL:
+            return {
+                ...state,
+                deleteGroupProcessing: false,
+                deleteGroupSuccess: false,
+                deleteGroupFail: true,
+            }
+        case types.JOIN_GROUP_ANONYMOUS_REQUEST:
+            return {
+                ...state,
+                joinGroupAnonymousProcessing: true,
+                joinGroupAnonymousSuccess: false,
+                joinGroupAnonymousFail: false,
+            }
+        case types.JOIN_GROUP_ANONYMOUS_SUCCESS:
+            return {
+                ...state,
+                joinGroupAnonymousProcessing: false,
+                joinGroupAnonymousSuccess: true,
+                joinGroupAnonymousFail: false,
+                allChat: [...state.allChat, payload],
+            }
+        case types.JOIN_GROUP_ANONYMOUS_FAIL:
+            return {
+                ...state,
+                joinGroupAnonymousProcessing: false,
+                joinGroupAnonymousSuccess: false,
+                joinGroupAnonymousFail: true,
+            }
         case types.WEB_SOCKET_CONNECTED:
             return {
                 ...state,
