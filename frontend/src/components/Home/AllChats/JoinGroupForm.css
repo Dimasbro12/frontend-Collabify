@@ -1,0 +1,57 @@
+.join-group-form {
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 30px;
+  border: 3px solid #000;
+  background-color: #fdf6e3;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.join-group-form h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.join-group-form label {
+  display: block;
+  margin-bottom: 15px;
+  font-weight: bold;
+}
+
+.join-group-form input {
+  width: 100%;
+  padding: 8px;
+  border: 2px solid #000;
+  background-color: #fff;
+  font-size: 14px;
+  outline: none;
+  margin-top: 5px;
+}
+
+.retro-button {
+  width: 100%;
+  padding: 10px;
+  border: 3px solid #000;
+  background-color: #ffcc00;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: 0.2s ease-in-out;
+}
+
+.retro-button:hover {
+  background-color: #ffe066;
+}
+
+.error {
+  color: red;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.success {
+  color: green;
+  margin-top: 10px;
+  font-weight: bold;
+}

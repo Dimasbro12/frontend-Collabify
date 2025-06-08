@@ -1,3 +1,4 @@
+
 import * as types from "./actionType"
 
 const initialState = {
@@ -46,6 +47,10 @@ const initialState = {
     getMessageSuccess: false,
     getMessageFail: false,
     getMessageData: {},
+
+    joinGroupLoading: false,
+    joinGroupSuccess: null,
+    joinGroupError: null,
 
     selectedUserForChat: null,
 
@@ -310,6 +315,29 @@ export const reducer = (state = initialState, action) => {
                 notficationsMessages: [...state.notficationsMessages, payload],
             };
 
+
+        case types.AI_REQUEST_PROCESSING:
+                    return{
+                        ...state,aiLoading:true,aiError:null
+                    }
+        case types.AI_REQUEST_SUCCESS:
+                    return{
+                        ...state,aiLoading:false
+                    }
+        
+        case types.AI_REQUEST_FAIL:
+                    return{
+                        ...state,aiLoading:false,aiError:action.payload
+                    }
+
+        case types.JOIN_GROUP_REQUEST:
+            return { ...state, joinGroupLoading: true, joinGroupError: null, joinGroupSuccess: null };
+
+        case types.JOIN_GROUP_REQUEST_SUCCESS:
+            return { ...state, joinGroupLoading: false, joinGroupSuccess: action.payload };
+
+        case types.JOIN_GROUP_REQUEST_FAIL:
+            return { ...state, joinGroupLoading: false, joinGroupError: action.payload };
 
         default:
             return state;

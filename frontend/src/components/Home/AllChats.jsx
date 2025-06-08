@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getChats } from "../../redux/appReducer/action";
 import CreateGroupChat from "./AllChats/CreateGroupChat";
 import DisplayChatCard from "./AllChats/DisplayChatCard";
+import {JoinGroupButton} from "./AllChats/joinButton";
 
 export default function AllChats() {
   const dispatch = useDispatch();
@@ -20,6 +21,7 @@ export default function AllChats() {
   return (
     <div className="flex flex-col flex-grow p-2 mt-3 ">
       <CreateGroupChat />
+      <JoinGroupButton />
 
       <div className="bg-primary-600/5- mt-3 rounded-lg p-2  ">
         <div className="max-h-[72vh] p-2 overflow-y-auto">

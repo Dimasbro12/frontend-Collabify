@@ -6,10 +6,10 @@ import { useDispatch, useSelector } from "react-redux";
 import logo from "../../assets/white-logo.png";
 import { toast, ToastContainer } from "react-toastify";
 import ScrollableFeed from "react-scrollable-feed";
-import { sendMessage, setWebSocketReceivedMessage } from "../../redux/appReducer/action";
+import { sendMessage, setWebSocketReceivedMessage, getAIResponse } from "../../redux/appReducer/action";
 import { FaGithub } from "react-icons/fa";
 import axios from "axios";
-//import { GoogleGenerativeAI } from "@google/generative-ai";
+
 
 export default function ChatBox() {
   const selectedUserForChat = useSelector((state) => state.appReducer.selectedUserForChat);
@@ -24,9 +24,6 @@ export default function ChatBox() {
   const webSocket = useSelector((state) => state.appReducer.webSocket);
   const currentUser = useSelector((state) => state.authReducer.user);
   
-  // const genAi = new GoogleGenerativeAI({
-  //   apiKey: "AIzaSyBkDRkmr-YTM5YiNw096PmoDwu3ITjUqV0",
-  // });
   const [aiResponse, setAiResponse] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [userInput, setUserInput] = useState("");
@@ -46,101 +43,30 @@ export default function ChatBox() {
   };
 
   const handleAiSupport = async () => {
-    if (!userInput.trim()) return;
-    // user_id = selectedUserForChat._id
-    const userData = JSON.parse(localStorage.getItem("chat-app-login-user-data"));
-    const user_id = userData?.user?._id || userData?._id;
-    if (!user_id) {
-      toast.error("User not logged in");
-      return;
-    }
-  
-    
-  
-    try {
-      let prompt = "";
-  
-      if (userInput.includes("error") || userInput.toLowerCase().includes("exception")) {
-        prompt = `
-          Jelaskan error berikut secara jelas dan berikan solusi jika ada:
-          ---
-          ${userInput}
-          ---
-          Jika memungkinkan, berikan contoh perbaikan kode.`;
-      } else if (
-        userInput.includes("function") ||
-        userInput.includes(";") ||
-        userInput.includes("{")
-      ) {
-        prompt = `
-          Berdasarkan potongan kode berikut, carikan referensi repository GitHub open-source yang relevan, 
-          dan berikan sedikit penjelasan:
-          ---
-          ${userInput}
-          ---
-          Format balasan:
-          - Penjelasan singkat
-          - Daftar repository dengan nama & link`;
-      } else {
-        prompt = `Bantu jawab atau beri respon yang relevan untuk pesan ini: ${userInput}`;
-      }
-  
-      // Ganti dengan endpoint lokal kamu
-      setAiLoading(true);
-      const response = await axios.post("http://localhost:8080/api/ai/ask",{
-        prompt: prompt.trim(),
-        user_id: user_id,
-      });
-  
-      const aiReply = response.data.reply || "⚠️ Tidak ada balasan dari AI.";
-      setAiResponse(aiReply);
-    } catch (error) {
-      console.error("Error contacting AI:", error);
-      setAiResponse("⚠️ Gagal menghubungi AI lokal.");
-    } finally {
-      setAiLoading(false);
-    }
-  };
-  
-  // const handleAiSupport = async () => {
-  //   if (!userInput.trim()) return;
+  if (!userInput.trim()) return;
 
-  //   setAiLoading(true);
-  //   try {
-  //     const model = genAi.getGenerativeModel({ model: "gemini-2.5-pro-preview-03-25" });
+  // const userData = JSON.parse(localStorage.getItem("chat-app-login-user-data"));
+  // const user_id = userData?.user?._id || userData?._id;
+  // if (!user_id) {
+  //   toast.error("User not logged in");
+  //   return;
+  //}
 
-  //     let prompt = "";
-  //     if (userInput.includes("error") || userInput.toLowerCase().includes("exception")) {
-  //       prompt = `
-  //         Jelaskan error berikut secara jelas dan berikan solusi jika ada:
-  //         ---
-  //         ${userInput}
-  //         ---
-  //         Jika memungkinkan, berikan contoh perbaikan kode.`;
-  //     } else if (userInput.includes("function") || userInput.includes(";") || userInput.includes("{")) {
-  //       prompt = `
-  //         Berdasarkan potongan kode berikut, carikan referensi repository GitHub open-source yang relevan, 
-  //         dan berikan sedikit penjelasan:
-  //         ---
-  //         ${userInput}
-  //         ---
-  //         Format balasan:
-  //         - Penjelasan singkat
-  //         - Daftar repository dengan nama & link`;
-  //     } else {
-  //       prompt = `Bantu jawab atau beri respon yang relevan untuk pesan ini: ${userInput}`;
-  //     }
-
-  //     const result = await model.generateContent(prompt);
-  //     const response = await result.response;
-  //     const text = await response.text();
-  //     setAiResponse(text);
-  //   } catch (error) {
-  //     setAiResponse("⚠️ Gagal menghubungi AI.");
-  //   } finally {
-  //     setAiLoading(false);
-  //   }
-  // };
+  try {
+    setAiLoading(true);
+    if(!userInput.trim()){
+          toast.warn("Please write a message to ask AI", { position: "bottom-left", autoClose: 2000 });
+          return;
+        }
+        dispatch(getAIResponse(userInput, selectedUserForChat._id));
+        setUserInput("");
+  } catch (error) {
+    console.error("Error contacting AI:", error);
+    setAiResponse("⚠️ Gagal menghubungi AI lokal.");
+  } finally {
+    setAiLoading(false);
+  }
+};
 
   useEffect(() => {
     return () => {
@@ -203,12 +129,12 @@ export default function ChatBox() {
               Array.isArray(getMessageData) && getMessageData.map((item) => <Message item={item} key={item.id} />)
             )}
           </ScrollableFeed>
-          {aiResponse && (
+          {/* {aiResponse && (
             <div className="bg-white text-sm text-gray-800 rounded-lg p-3 shadow mt-2 border-l-4 border-purple-500 whitespace-pre-line">
               <strong>🤖 AI Response:</strong>
               <div>{aiResponse}</div>
             </div>
-          )}
+          )} */}
         </div>
         <div className="relative mt-2">
           <input

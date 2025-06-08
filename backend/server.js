@@ -20,7 +20,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-    console.log("welcome to chat app");
+    console.log("welcome to colabify");
 })
 
 app.use("/api/user", userRoutes);
@@ -33,9 +33,10 @@ const server = app.listen(port, console.log("server is running at post = ", port
 
 const io = require("socket.io")(server, {
     cors: {
-        origin: "https://chat-app-ca.netlify.app", 
+        origin: "http://localhost:3000", 
     },
 });
+app.set("io", io);
 
 io.on("connection", (socket) => {
     socket.on("setup", (userData) => {

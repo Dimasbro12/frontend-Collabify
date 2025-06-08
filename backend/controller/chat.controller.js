@@ -174,6 +174,63 @@ const addToGroup = asyncHandler(async (req, res) => {
         res.status(200).json({data:newChatObj, message:"Successfully added to group"})
     }
 
-})
+});
 
-module.exports = { accessChat, getChats, createGroupChat, renameGroup, removeFromGroup, addToGroup };
+const joinGroup = asyncHandler(async (req, res) => {
+  const { chatId } = req.body;
+
+  if (!chatId) {
+    return res.status(400).json({ error: "chatId is required." });
+  }
+
+  const chat = await Chat.findById(chatId);
+
+  if (!chat) {
+    return res.status(404).json({ error: "Chat not found." });
+  }
+
+  if (!chat.isGroupChat) {
+    return res.status(400).json({ error: "This is not a group chat." });
+  }
+
+  const newMemberId = req.user?._id;
+
+  if (!newMemberId) {
+    return res.status(401).json({ error: "Unauthorized: User not authenticated." });
+  }
+
+  // Cek apakah user sudah tergabung
+  if (chat.users.includes(newMemberId)) {
+    return res.status(400).json({ error: "You are already a member of this group." });
+  }
+
+  // Tambahkan user ke group (dengan $addToSet agar tidak duplikat jika dipanggil lagi)
+  const updatedChat = await Chat.findByIdAndUpdate(
+    chatId,
+    { $addToSet: { users: newMemberId } },
+    { new: true }
+  )
+    .populate("users", "-password")
+    .populate("groupAdmin", "-password")
+    .populate({
+        path: "latestMessage",
+        populate: {
+          path: "sender",
+          select: "name email",
+        },
+      });
+
+  if (!updatedChat) {
+    return res.status(500).json({ error: "Failed to join the group." });
+  }
+
+  return res.status(200).json({
+    data: updatedChat,
+    message: "Successfully joined the group.",
+  });
+});
+
+
+
+
+module.exports = { accessChat, getChats, createGroupChat, renameGroup, removeFromGroup, addToGroup, joinGroup };

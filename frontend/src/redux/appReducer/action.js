@@ -1,7 +1,7 @@
 import axios from "axios";
 import * as types from "./actionType";
 
-const END_POINT = "https://chatc.onrender.com";
+const END_POINT = "http://localhost:8080";
 
 const jwtToken = () => {
   const userData = JSON.parse(localStorage.getItem("chat-app-login-user-data"));
@@ -222,4 +222,56 @@ const removeMembersFromGroup = (obj) => async (dispatch) => {
   }
 };
 
-export { searchUsers, createSingleUserChat, getChats, createGroup, addMembersInGroup, removeMembersFromGroup, changeGroupName, selectUserForChat, sendMessage, getMessage, setWebSocketReceivedMessage };
+const getAIResponse = (userInput, chatId) => async (dispatch) =>{
+  dispatch({type: types.AI_REQUEST_PROCESSING});
+  try{
+    let prompt = "";
+    if (userInput.includes("error") || userInput.toLowerCase().includes("exception")) {
+      prompt = `Jelaskan error berikut secara jelas dan berikan solusi jika ada:\n---\n${userInput}\n---\nJika memungkinkan, berikan contoh perbaikan kode.`;
+    } else if (
+      userInput.includes("function") || userInput.includes(";") || userInput.includes("{")
+    ) {
+      prompt = `Berdasarkan potongan kode berikut, carikan referensi repository GitHub open-source yang relevan, dan berikan sedikit penjelasan:\n---\n${userInput}\n---\nFormat balasan:\n- Penjelasan singkat\n- Daftar repository dengan nama & link`;
+    } else {
+      prompt = `Pertanyaan tidak relevan dengan error programming: ${userInput}`;
+    }
+
+    const userData = JSON.parse(localStorage.getItem("chat-app-login-user-data"));
+    const user_id = userData?._id;
+    const {data} = await axios.post(`${END_POINT}/api/ai/ask`, {
+      prompt:prompt,
+      chatId,
+      user_id,
+    });
+
+    dispatch({type:types.AI_REQUEST_SUCCESS});
+    dispatch(getMessage(chatId));
+    
+  }catch(error){
+    console.log(error);
+    dispatch({type: types.AI_REQUEST_FAIL});
+  }
+};
+
+const joinGroup = (chatId) => async (dispatch) => {
+  dispatch({ type: types.JOIN_GROUP_REQUEST });
+
+  try{
+    const result = await axios.put(`${END_POINT}/api/chat/group/user/join`, { chatId }, {
+      headers: {
+        Authorization: jwtToken(),
+      },
+    });
+    dispatch({
+      type: types.JOIN_GROUP_REQUEST_SUCCESS,
+      payload: result.data, // berisi full chat object
+    });
+  }catch(error){
+    dispatch({
+      type: types.JOIN_GROUP_REQUEST_FAIL,
+      payload: error.response?.data?.error || "Failed to join group chat",
+    })
+  }
+}
+
+export { searchUsers, createSingleUserChat, getChats, createGroup, addMembersInGroup, removeMembersFromGroup, changeGroupName, selectUserForChat, sendMessage, getMessage, setWebSocketReceivedMessage, getAIResponse, joinGroup };
