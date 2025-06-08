@@ -2,11 +2,31 @@ import React, { useEffect, useState } from 'react';
 import { BsInfoCircle } from 'react-icons/bs';
 import { AiOutlineCloseCircle } from 'react-icons/ai';
 import { useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
+import { exitGroup, resetSelectedUserForChat } from '../../../redux/appReducer/action';
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function ChatDetails() {
   const selectedUserForChat = useSelector((state) => state.appReducer.selectedUserForChat);
   const [showModal, setShowModal] = useState(false);
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleExitGroup = async () =>{
+    try{
+      dispatch(exitGroup({ chatId: selectedUserForChat._id }));
+      toast.success("You have exited the group successfully.", { position: toast.POSITION.BOTTOM_LEFT });
+      dispatch(resetSelectedUserForChat())
+      toggleModal();
+      navigate('/');
+    }catch (error) {
+      console.error("Error exiting group:", error);
+      toast.error("Failed to exit the group.", { position: toast.POSITION.BOTTOM_LEFT });
+    }
+  }
 
   const toggleModal = () => {
     setShowModal(!showModal);
@@ -38,6 +58,7 @@ export default function ChatDetails() {
             {/* total members */}
             <p className="text-md font-semibold text-primary-800 truncate mt-4"> Group Admin - <span className='font-normal'> {groupAdmin()} </span></p>
             <p className="text-md font-semibold text-primary-800 truncate mt-1"> Total Members - <span className='font-normal'> {selectedUserForChat.users.length}  </span> </p>
+            <p className="text-md font-semibold text-primary-800 truncate mt-1"> Group ID - <span className='font-normal'> {selectedUserForChat._id} </span> </p>
 
             {/* group members */}
             <div className='max-h-[50vh] min-w-[20vw] overflow-y-auto p-2'>
@@ -56,6 +77,16 @@ export default function ChatDetails() {
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* tampilkan tombol exit hapus grup  disini*/}
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={handleExitGroup}
+                className="bg-red-600 hover:bg-red-500 text-white font-semibold py-2 px-4 rounded-md"
+              >
+                Exit Group
+              </button>
             </div>
 
           </div>

@@ -339,6 +339,29 @@ export const reducer = (state = initialState, action) => {
         case types.JOIN_GROUP_REQUEST_FAIL:
             return { ...state, joinGroupLoading: false, joinGroupError: action.payload };
 
+
+        case types.EXIT_GROUP_REQUEST:
+            return { ...state, exitGroupLoading: true, exitGroupError: null, exitGroupSuccess: null };
+
+        case types.EXIT_GROUP_SUCCESS:
+            return { ...state, exitGroupLoading: false, exitGroupSuccess: action.payload };
+
+        case types.EXIT_GROUP_FAIL:
+            return { ...state, exitGroupLoading: false, exitGroupError: action.payload };
+
+        case types.DELETE_CHAT_FROM_USER_VIEW:
+            return {
+                ...state,
+                allChat: Array.isArray(state.allChat) ? state.allChat.filter(chat => chat._id != action.payload) : [],
+            };
+
+        case "RESET_SELECTED_USER_FOR_CHAT":
+            return {
+                ...state,
+                selectedUserForChat: null,
+            };
+
+
         default:
             return state;
     }

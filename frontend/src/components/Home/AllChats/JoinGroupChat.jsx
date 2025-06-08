@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { joinGroup, selectUserForChat } from "../../../redux/appReducer/action";
+import { joinGroup, selectUserForChat, getChats } from "../../../redux/appReducer/action";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
@@ -29,11 +29,16 @@ const JoinGroupModal = ({ isVisible, toggleModal }) => {
 
       const joinedChat = success.data;
        if (joinedChat) {
-      // setRedux selected chat
-      dispatch(selectUserForChat(joinedChat));
-
-      // Redirect ke halaman chatbox
-      navigate("/ChatBox");
+       // setRedux selected chat
+        dispatch(selectUserForChat(joinedChat));
+        // update daftar chat
+        dispatch(getChats());
+        // close modal
+        toggleModal();
+        // redirect ke chatbox
+        navigate("/ChatBox");
+        // reset input
+        setChatId("");
     }
 
       // toggleModal();
@@ -43,7 +48,7 @@ const JoinGroupModal = ({ isVisible, toggleModal }) => {
     if (error && !loading) {
       toast.error(error || "Failed to join group.", { position: toast.POSITION.BOTTOM_LEFT });
     }
-  }, [success, error, loading, toggleModal]);
+  }, [success, error, loading]);
 
   if (!isVisible) return null;
 

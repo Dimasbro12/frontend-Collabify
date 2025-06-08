@@ -231,6 +231,59 @@ const joinGroup = asyncHandler(async (req, res) => {
 });
 
 
+const exitGroup = asyncHandler(async (req, res) => {
+  const { chatId } = req.body;
+
+  if (!chatId) {
+    return res.status(400).json({ error: "chatId is required" });
+  }
+
+  const chat = await Chat.findById(chatId);
+
+  if (!chat) {
+    return res.status(404).json({ error: "Chat not found." });
+  }
+
+  // Jika yang keluar adalah user biasa
+  const userId = req.user._id.toString();
+
+  // Cegah admin keluar
+//   if (chat.groupAdmin?.toString() === userId) {
+//     return res.status(403).json({ error: "Group admin cannot exit the group." });
+//   }
+
+  // Cek apakah user ada di dalam grup
+  const isUserInChat = chat.users.some(user => user.toString() === userId);
+  if (!isUserInChat) {
+    return res.status(404).json({ error: "User not part of the group." });
+  }
+
+  // Keluarkan user dari grup
+  chat.users = chat.users.filter(user => user.toString() !== userId);
+  const isAdmin = chat.groupAdmin?.toString() === userId;
+
+  if(isAdmin){
+    if(chat.users.length >0){
+        chat.groupAdmin = chat.users[0]; // Set admin to the first user in the group
+    }else{
+        chat.groupAdmin = null;
+    }
+  }
+
+  if(chat.users.length === 0){
+    await Chat.findByIdAndDelete(chatId);
+    return res.status(200).json({ message: "Group deleted as no users left." });
+  }
+
+  await chat.save();
+
+  const updatedChat = await Chat.findById(chatId)
+    .populate("users", "-password")
+    .populate("groupAdmin", "-password");
+
+  return res.status(200).json({ message: "User exited the group.", chat: updatedChat });
+});
 
 
-module.exports = { accessChat, getChats, createGroupChat, renameGroup, removeFromGroup, addToGroup, joinGroup };
+
+module.exports = { accessChat, getChats, createGroupChat, renameGroup, removeFromGroup, addToGroup, joinGroup, exitGroup };

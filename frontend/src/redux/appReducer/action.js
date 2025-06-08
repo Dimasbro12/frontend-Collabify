@@ -272,6 +272,31 @@ const joinGroup = (chatId) => async (dispatch) => {
       payload: error.response?.data?.error || "Failed to join group chat",
     })
   }
-}
+};
 
-export { searchUsers, createSingleUserChat, getChats, createGroup, addMembersInGroup, removeMembersFromGroup, changeGroupName, selectUserForChat, sendMessage, getMessage, setWebSocketReceivedMessage, getAIResponse, joinGroup };
+// exit group
+const exitGroup = (obj) => async (dispatch) => {
+  dispatch({ type: types.EXIT_GROUP_REQUEST });
+
+  try {
+    const result = await axios.put(`${END_POINT}/api/chat/group/user/exit`, obj, {
+      headers: {
+        Authorization: jwtToken(),
+      },
+    });
+
+    dispatch({ type: types.EXIT_GROUP_SUCCESS, payload: result.data });
+
+    // opsional: hapus chat dari local state jika perlu
+    dispatch({ type: types.DELETE_CHAT_FROM_USER_VIEW, payload: obj.chatId });
+  } catch (error) {
+    console.log("Exit group error:", error);
+    dispatch({ type: types.EXIT_GROUP_FAIL });
+  }
+};
+
+export const resetSelectedUserForChat = () => ({
+  type: "RESET_SELECTED_USER_FOR_CHAT",
+});
+
+export { searchUsers, createSingleUserChat, getChats, createGroup, addMembersInGroup, removeMembersFromGroup, changeGroupName, selectUserForChat, sendMessage, getMessage, setWebSocketReceivedMessage, getAIResponse, joinGroup, exitGroup };
