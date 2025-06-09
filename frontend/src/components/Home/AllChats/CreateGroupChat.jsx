@@ -103,69 +103,94 @@ export default function CreateGroupChat() {
       </div>
 
       {isModalVisible && (
-        <div className="fixed top-0 left-0 right-0 bottom-0 flex items-center justify-center z-50 backdrop-filter backdrop-blur-sm">
-          <div className="bg-white rounded-lg shadow p-6 max-w-md w-full">
-            <div className="text-left">
-              <h3 className="mb-5 text-lg font-normal">Create Group</h3>
-
-              {/* group name input */}
-              <CustomInput label="Group Name" value={userInput.groupName} onChange={handleInputChange} name="groupName" placeholder="Enter Group Name" required />
-
-              {/* search and add user input */}
-              <CustomInput label="Add User" value={userInput.searchUser} onChange={handleInputChange} name="searchUser" placeholder="Enter User" required />
-
-              {/* Badge status */}
-              {userInput.addUsers?.map((item) => (
-                <Badge label={item.name} userId={item.userId} removeUser={removeUser} key={item.userId} />
-              ))}
-
-              {/* loading status */}
-              {isSearchUserProcessing && (
-                <div className="mt-5 mx-auto h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status"></div>
-              )}
-
-              {/* if no user found */}
-              {!isSearchUserProcessing && searchedUser.length === 0 && <p className="text-gray-500 text-center mt-4">No User Found.</p>}
-
-              {/* map searched result */}
-              <div className="max-h-[30vh] overflow-y-auto p-2">
-                {searchedUser.length !== 0 && searchedUser?.map((item) => <AddUser addUser={addUser} userId={item._id} name={item.name} email={item.email} imageSrc={item.pic} key={item._id} />)}
-              </div>
-
-              <div className="flex justify-end">
-                {/* cancel button */}
-                <button
-                  onClick={toggleModal}
-                  type="button"
-                  disabled={createGroupChatProcessing}
-                  className="text-gray-800 mr-3  bg-white hover:bg-gray-200 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-800 text-sm font-medium px-5 py-2.5  focus:z-10 "
-                >
-                  Cancel
-                </button>
-
-                {/* create button */}
-                <button
-                  onClick={handelCreateGroup}
-                  type="button"
-                  disabled={createGroupChatProcessing}
-                  className="text-white mt-5 bg-primary-700 hover:bg-primary-500 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center"
-                >
-                  {createGroupChatProcessing ? (
-                    <>
-                      <div className="flex items-center justify-center">
-                        <span className="mr-2">Please wait</span>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      </div>
-                    </>
-                  ) : (
-                    "Create Group"
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+  <div className="fixed inset-0 flex items-center justify-center z-50 backdrop-blur-sm bg-black/30">
+    <div className="bg-white border-[3px] border-black rounded-xl p-6 w-full max-w-md">
+      <h2 className="text-center text-lg font-bold mb-4">Create Group</h2>
+      {/* group name input */}
+      <label className="block mb-3 font-bold">
+        Group Name:
+        <input
+          type="text"
+          name="groupName"
+          value={userInput.groupName}
+          onChange={handleInputChange}
+          placeholder="Enter Group Name"
+          required
+          className="mt-1 w-full p-2 border-2 border-black bg-white outline-none"
+          disabled={createGroupChatProcessing}
+        />
+      </label>
+      {/* search and add user input */}
+      <label className="block mb-3 font-bold">
+        Add User:
+        <input
+          type="text"
+          name="searchUser"
+          value={userInput.searchUser}
+          onChange={handleInputChange}
+          placeholder="Enter User"
+          required
+          className="mt-1 w-full p-2 border-2 border-black bg-white outline-none"
+          disabled={createGroupChatProcessing}
+        />
+      </label>
+      {/* Badge status */}
+      <div className="flex flex-wrap gap-2 mb-2">
+        {userInput.addUsers?.map((item) => (
+          <Badge label={item.name} userId={item.userId} removeUser={removeUser} key={item.userId} />
+        ))}
+      </div>
+      {/* loading status */}
+      {isSearchUserProcessing && (
+        <div className="mt-5 mx-auto h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" role="status"></div>
       )}
+      {/* if no user found */}
+      {!isSearchUserProcessing && searchedUser.length === 0 && (
+        <p className="text-gray-500 text-center mt-4">No User Found.</p>
+      )}
+      {/* map searched result */}
+      <div className="max-h-[30vh] overflow-y-auto p-2">
+        {searchedUser.length !== 0 &&
+          searchedUser?.map((item) => (
+            <AddUser
+              addUser={addUser}
+              userId={item._id}
+              name={item.name}
+              email={item.email}
+              imageSrc={item.pic}
+              key={item._id}
+            />
+          ))}
+      </div>
+      <div className="flex justify-end gap-2 mt-4">
+        <button
+          onClick={toggleModal}
+          type="button"
+          disabled={createGroupChatProcessing}
+          className="border-2 border-black bg-white hover:bg-gray-100 text-black font-bold py-2 px-4"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handelCreateGroup}
+          type="button"
+          disabled={createGroupChatProcessing}
+          className="border-2 border-black bg-yellow-300 hover:bg-yellow-400 text-black font-bold py-2 px-4"
+        >
+          {createGroupChatProcessing ? (
+            <span className="flex items-center">
+              <span className="mr-2">Please wait</span>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black"></div>
+            </span>
+          ) : (
+            "Create Group"
+          )}
+        </button>
+      </div>
+    </div>
+    <ToastContainer />
+  </div>
+)}
 
       <ToastContainer />
     </section>

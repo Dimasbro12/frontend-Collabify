@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getMessage, selectUserForChat } from "../../../redux/appReducer/action";
 
@@ -20,15 +20,27 @@ const DisplayChatCard = ({ item }) => {
   return (
     <div
       onClick={handelSelectUserForChat}
-      className="bg-gradient-to-r from-purple-600/50 via-fuchsia-500/50 to-green-400/50 cursor-pointer rounded-lg shadow-md mt-3 hover:shadow-lg hover:ring-2 hover:ring-primary-200 hover:bg-gradient-to-r hover:from-purple-600/60 hover:via-fuchsia-500/60 hover:to-green-400/60 transition-shadow duration-200"
+      className="cursor-pointer rounded-lg border-2 border-black dark:border-gray-600 bg-white dark:bg-gray-900 shadow-sm hover:shadow-lg transition-shadow duration-150 mb-2 last:mb-0"
     >
       <div className="flex items-center space-x-4 p-2">
         <div className="flex-shrink-0">
-          <img className="w-10 h-10 rounded-full" src={item.isGroupChat ? "https://cdn-icons-png.flaticon.com/512/2043/2043173.png" : selectedUser.pic} alt={`${item.name} image`} />
+          <img
+            className="w-10 h-10 rounded-full border border-black dark:border-gray-600"
+            src={
+              item.isGroupChat
+                ? "https://cdn-icons-png.flaticon.com/512/2043/2043173.png"
+                : selectedUser.pic
+            }
+            alt={`${item.name} image`}
+          />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-md font-semibold text-primary-800 truncate ">{item.isGroupChat ? item.chatName : selectedUser.name}</p>
-          <p className="text-xs font-semibold text-primary-400 truncate ">{item.latestMessage ? item.latestMessage.message : ""}</p>
+          <p className="text-md font-semibold text-gray-900 dark:text-white truncate">
+            {item.isGroupChat ? item.chatName : selectedUser.name}
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-300 truncate">
+            {item.latestMessage ? item.latestMessage.message : ""}
+          </p>
         </div>
       </div>
     </div>

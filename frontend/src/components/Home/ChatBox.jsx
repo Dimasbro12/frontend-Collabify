@@ -10,7 +10,6 @@ import { sendMessage, setWebSocketReceivedMessage, getAIResponse } from "../../r
 import { FaGithub } from "react-icons/fa";
 import axios from "axios";
 
-
 export default function ChatBox() {
   const selectedUserForChat = useSelector((state) => state.appReducer.selectedUserForChat);
   const sendMessageSuccess = useSelector((state) => state.appReducer.sendMessageSuccess);
@@ -23,7 +22,7 @@ export default function ChatBox() {
   const getMessageData = useSelector((state) => state.appReducer.getMessageData);
   const webSocket = useSelector((state) => state.appReducer.webSocket);
   const currentUser = useSelector((state) => state.authReducer.user);
-  
+
   const [aiResponse, setAiResponse] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [userInput, setUserInput] = useState("");
@@ -43,30 +42,22 @@ export default function ChatBox() {
   };
 
   const handleAiSupport = async () => {
-  if (!userInput.trim()) return;
-
-  // const userData = JSON.parse(localStorage.getItem("chat-app-login-user-data"));
-  // const user_id = userData?.user?._id || userData?._id;
-  // if (!user_id) {
-  //   toast.error("User not logged in");
-  //   return;
-  //}
-
-  try {
-    setAiLoading(true);
-    if(!userInput.trim()){
-          toast.warn("Please write a message to ask AI", { position: "bottom-left", autoClose: 2000 });
-          return;
-        }
-        dispatch(getAIResponse(userInput, selectedUserForChat._id));
-        setUserInput("");
-  } catch (error) {
-    console.error("Error contacting AI:", error);
-    setAiResponse("⚠️ Gagal menghubungi AI lokal.");
-  } finally {
-    setAiLoading(false);
-  }
-};
+    if (!userInput.trim()) return;
+    try {
+      setAiLoading(true);
+      if (!userInput.trim()) {
+        toast.warn("Please write a message to ask AI", { position: "bottom-left", autoClose: 2000 });
+        return;
+      }
+      dispatch(getAIResponse(userInput, selectedUserForChat._id));
+      setUserInput("");
+    } catch (error) {
+      console.error("Error contacting AI:", error);
+      setAiResponse("⚠️ Gagal menghubungi AI lokal.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   useEffect(() => {
     return () => {
@@ -100,83 +91,76 @@ export default function ChatBox() {
 
   if (!selectedUserForChat) {
     return (
-      <div className="flex flex-col h-4/5 mt-8 bg-primary-600/50 rounded-lg px-4 py-2 pb-4">
-        <div className="flex flex-col items-center justify-center h-full">
-          <img className="w-20 h-20 mr-2" src={logo} alt="logo" />
-          <p className="text-white">Enjoy Your Chat!</p>
-        </div>
+      <div className="flex flex-col h-full bg-primary-600/50 rounded-lg px-4 py-2 pb-4 justify-center items-center">
+        <img className="w-20 h-20 mb-2" src={logo} alt="logo" />
+        <p className="text-white">Enjoy Your Chat!</p>
       </div>
     );
   }
-  return (
-    <>
-      <ChatHeader />
-      <div className="flex flex-col bg-gradient-to-r from-purple-600 via-fuchsia-500 to-green-400/80 rounded-bl-lg rounded-br-lg px-4 py-2 pb-4">
-        <div className="flex h-full flex-col max-h-[75vh] overflow-y-auto bg-primary-400  rounded-lg mb-2">
-          {getMessageProcessing && (
-            <div className="flex flex-col items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white"></div>
-              <span className="mr-2 text-white">Loading Messages</span>
-            </div>
-          )}
-          <ScrollableFeed>
-            {Array.isArray(getMessageData) && getMessageData.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full">
-                <img className="w-20 h-20 mr-2" src={logo} alt="logo" />
-                <p className="text-white">Start Chating!</p>
-              </div>
-            ) : (
-              Array.isArray(getMessageData) && getMessageData.map((item) => <Message item={item} key={item.id} />)
-            )}
-          </ScrollableFeed>
-          {/* {aiResponse && (
-            <div className="bg-white text-sm text-gray-800 rounded-lg p-3 shadow mt-2 border-l-4 border-purple-500 whitespace-pre-line">
-              <strong>🤖 AI Response:</strong>
-              <div>{aiResponse}</div>
-            </div>
-          )} */}
-        </div>
-        <div className="relative mt-2">
-          <input
-            disabled={sendMessageProcessing}
-            value={userInput}
-            onChange={(e) => {
-              setUserInput(e.target.value);
-            }}
-            type="text"
-            className="border border-gray-300 bg-primary-50 text-primary-900 font-semibold sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 pr-10 "
-            placeholder="Type your message..."
-          />
-          <button type="button" className="absolute inset-y-0 right-10 px-8 py-2.7 text-primary-800 focus:outline-none">
-            <BsEmojiSmile className="w-5 h-5" />
-          </button>
-          <button
-            disabled={sendMessageProcessing}
-            type="button"
-            className="absolute inset-y-0  right-1 top-1 bottom-1 px-2.5 py-1 rounded-lg hover:bg-primary-700 bg-primary-800 text-primary-100 focus:outline-none"
-            onClick={handleSendMessage}
-          >
-            {sendMessageProcessing ? (
-              <div className="flex items-center justify-center">
-                <span className="mr-2">Sending</span>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              </div>
-            ) : (
-              "Send"
-            )}
-          </button>
-          <button
-            disabled={sendMessageProcessing || aiLoading}
-            type="button"
-            className="absolute inset-y-0 right-24 top-1 bottom-1 px-2.5 py-1 rounded-lg hover:bg-purple-700 bg-purple-800 text-white focus:outline-none"
-            onClick={handleAiSupport}
-          >
-            <FaGithub className="inline-block mr-1" />
-            {aiLoading ? "Thinking..." : "Ask AI"}
-          </button>
-        </div>
+return (
+  <>
+    <div className="flex flex-col flex-grow h-[calc(100vh-2rem)] bg-gradient-to-br from-purple-600 via-fuchsia-500 to-green-400/80 rounded-xl px-4 py-2 shadow-lg">
+      {/* Header */}
+      <div className="border-2 border-black dark:border-gray-700 rounded-t-lg bg-white/95 dark:bg-gray-900/90 px-4 py-3 flex-shrink-0">
+        <ChatHeader />
       </div>
-      <ToastContainer />
-    </>
-  );
+      {/* Scrollable area */}
+      <div className="flex-1 flex flex-col overflow-y-auto border-x-2 border-b-2 border-black dark:border-gray-700 bg-white/95 dark:bg-gray-900/90 rounded-b-lg p-2">
+        {getMessageProcessing && (
+          <div className="flex flex-col items-center justify-center h-full">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500"></div>
+            <span className="mr-2 text-gray-700 dark:text-gray-200">Loading Messages</span>
+          </div>
+        )}
+        <ScrollableFeed>
+          {Array.isArray(getMessageData) && getMessageData.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full">
+              <img className="w-20 h-20 mb-2" src={logo} alt="logo" />
+              <p className="text-gray-700 dark:text-gray-200">Start Chating!</p>
+            </div>
+          ) : (
+            Array.isArray(getMessageData) && getMessageData.map((item) => <Message item={item} key={item.id} />)
+          )}
+        </ScrollableFeed>
+      </div>
+      {/* Input area */}
+      <form
+        className="flex items-center gap-2 mt-2"
+        onSubmit={e => {
+          e.preventDefault();
+          handleSendMessage();
+        }}
+      >
+        <input
+          disabled={sendMessageProcessing}
+          value={userInput}
+          onChange={(e) => setUserInput(e.target.value)}
+          type="text"
+          className="flex-1 border-2 border-black dark:border-gray-700 bg-white/90 dark:bg-gray-900/90 text-gray-900 dark:text-gray-100 font-semibold rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 px-4 py-2"
+          placeholder="Type your message..."
+        />
+        <button
+          disabled={sendMessageProcessing}
+          type="submit"
+          className="flex items-center justify-center bg-gradient-to-r from-purple-700 via-fuchsia-600 to-green-500 hover:from-purple-800 hover:to-green-600 text-white rounded-lg p-2 transition-all border-2 border-black dark:border-gray-700 shadow"
+          title="Send"
+        >
+          <BsSendFill size={22} />
+        </button>
+        <button
+          disabled={sendMessageProcessing || aiLoading}
+          type="button"
+          className="flex items-center justify-center bg-gradient-to-r from-gray-700 via-purple-700 to-fuchsia-500 hover:from-gray-800 hover:to-fuchsia-600 text-white rounded-lg p-2 transition-all border-2 border-black dark:border-gray-700 shadow"
+          onClick={handleAiSupport}
+          title="Ask AI"
+        >
+          <FaGithub className="mr-1" />
+          {aiLoading ? "Thinking..." : "Ask AI"}
+        </button>
+      </form>
+    </div>
+    <ToastContainer />
+  </>
+);
+
 }
