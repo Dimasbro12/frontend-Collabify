@@ -1,7 +1,7 @@
 import axios from "axios";
 import * as types from "./actionType";
 
-const END_POINT="http://localhost:8080";
+const END_POINT="http://backend-collabify-production.up.railway.app";
 
 //  sign up user / create account
 const createAccount = (user) => async (dispatch) => {
