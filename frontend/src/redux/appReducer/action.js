@@ -1,7 +1,7 @@
 import axios from "axios";
 import * as types from "./actionType";
 
-const END_POINT = "http://backend-collabify-production.up.railway.app";
+const END_POINT = "https://backend-collabify-production.up.railway.app";
 
 const jwtToken = () => {
   const userData = JSON.parse(localStorage.getItem("chat-app-login-user-data"));
